@@ -37,19 +37,19 @@
 
 <button class="close-mobile-sidebar" id="close-mobile-sidebar" aria-label="Close navigation menu">x</button>
 <ul>
-		<li><a href=" ">U.S.</a></li>
-		<li><a href=" ">World</a></li>
-		<li><a href=" ">Business</a></li>
-		<li><a href=" ">Arts</a></li>
-		<li><a href=" ">Lifestyle</a></li>
-		<li><a href=" ">Opinion</a></li>
+		<li><a href="# ">U.S.</a></li>
+		<li><a href="# ">World</a></li>
+		<li><a href="# ">Business</a></li>
+		<li><a href="# ">Arts</a></li>
+		<li><a href="# ">Lifestyle</a></li>
+		<li><a href="# ">Opinion</a></li>
 		<li class="mobile-divider"></li>
-		<li><a href=" ">Audio</a></li>
-		<li><a href=" ">Games</a></li>
-		<li><a href=" ">Cooking</a></li>
-		<li><a href=" ">Wirecutter</a></li>
-		<li><a href=" ">The Athletic</a></li>
+		<li><a href="# ">Audio</a></li>
+		<li><a href="# ">Games</a></li>
+		<li><a href="# ">Cooking</a></li>
+		<li><a href="# ">Wirecutter</a></li>
+		<li><a href="# ">The Athletic</a></li>
 		<li class="mobile-divider"></li>
-		<li><a href=" ">Search</a></li>
-		<li><a href=" ">Log In</a></li>
+		<li><a href="# ">Search</a></li>
+		<li><a href="# ">Log In</a></li>
 </ul>
