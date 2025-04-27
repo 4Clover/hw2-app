@@ -1,79 +1,441 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /*font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;*/
+  /*line-height: 1.5;*/
+  /*font-weight: 400;*/
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /*color: rgba(255, 255, 255, 0.87);*/
+  background-color: white;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* --------- GLOBAL VARIABLES --------- */
+  /**
+    * IMPORTANT: --highest-z-index
+    * Tracks the highest z-index value currently used globally.
+    * ----------------------------------------
+    * --- REFERENCE AND UPDATE ACCORDINGLY ---
+    * ----------------------------------------
+    */
+  --highest-z-index: 1100;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+* { /* all elements a.k.a defaults */
+  box-sizing: border-box; /* padding/border added to elements total width/height */
+  /* remove defaults */
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  /* style placeholder */
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/*##############################################
+    LAYOUT CONTAINERS - Centering content
+################################################*/
+header, main, footer {
+  max-width: 1200px;
+  margin: 0 auto; /* center content horizontally */
+  padding: 0 15px; /* horizontal padding for narrow windows, stops edge contact */
 }
 
-.card {
-  padding: 2em;
+/*##############################################
+    GENERAL LINK STYLING
+################################################*/
+a {
+  color: #2db2ff; /* default link color */
+  text-decoration: none; /* no default underline */
 }
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+a:hover, a:focus {
+  text-decoration: underline; /* feedback on hover/focus */
+}
+
+/*##############################################
+    HEADER SECTION
+################################################*/
+header {
+  border-bottom: 1px solid #e2e2e2; /* line separating header and main content */
+  padding-bottom: 10px; /* space between content and border */
+  margin-bottom: 20px; /* space between header and main */
+}
+
+/*---------------------------------------------
+    Top Bar - Search, Language, Login
+----------------------------------------------*/
+.top-bar {
+  display: flex; /* flexbox */
+  justify-content: space-between;
+  align-items: center; /* vertical align */
+  padding: 10px 0;
+  font-size: 1em;
+  font-family: "Arial", sans-serif;
+  color: #555; /* text color */
+  border-bottom: 1px none #f0f0f0; /* ensure no inherited border */
+}
+
+.login-button {
+  padding: 3px 8px; /* inside the button */
+  background-color: #6375c7;
+  color: white; /* text color */
+  border: none;
+  cursor: pointer; /* feedback on hover */
+  font-size: 0.9em;
+  border-radius: 3px; /* rounded corners */
+}
+
+.login-button:hover {
+  background-color: #2775c7; /* hover feedback */
+}
+
+.top-bar-center a {
+  color: #555; /* language link color */
+  text-decoration: 1.2em;
+}
+
+.top-bar-center a:hover {
+  box-shadow: 0 0 0 5px rgb(0 0 0 / 4%);
+  text-decoration: none;
+  background-color: transparent;
+  background-blend-mode: luminosity;
+}
+
+.top-bar-center span{
+  padding-left: 10px; /* link spacing */
+}
+
+/* TODO: Search */
+
+/*---------------------------------------------
+   Title Bar - Date, Main Title, Market Widget
+----------------------------------------------*/
+.title-bar{
+  display: flex; /* flexbox */
+  justify-content: space-between;
+  align-items: center; /* vertical align */
+  padding: 15px 0;
+  text-align: center; /* default */
+}
+
+.title-bar-left { /* Date */
+  text-align: left;
+  font-family: "Helvetica Neue", Helvetica, sans-serif; /* date font */
+}
+
+.title-bar h1 { /* Main Title */
+  font-family: "Cambridge Goth", Times, serif; /* title font - TODO: Get NYT font or similar */
+  font-weight: bold;
+  font-size: 2.5em;
+  margin: 0; /* remove default margin */
+  flex-grow: 1; /* title fills available space, fixes centering oddities */
   text-align: center;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.title-bar-right { /* Market Widget */
+  text-align: right;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/*############################################
+            MAIN NAVIGATION BAR - Desktop
+ #############################################*/
+.main-nav-bar {
+  border-top: 1px solid #e2e2e2; /* line above  nav */
+  border-bottom: 1px solid #e2e2e2; /* line below nav */
+  padding: 8px 0;
+  position: relative; /* required for absolute positioning of children */
+}
+
+.main-nav-bar ul {
+  list-style-type: none; /* no list icon */
+  display: flex; /* horizontal layout */
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px; /* item spacing */
+}
+
+.main-nav-bar li {
+  display: inline-block; /* overrides flex, items stay on same line  */
+}
+
+.main-nav-bar a {
+  color: #333; /* link color */
+  text-transform: uppercase;
+  font-size: 0.9em; /
+font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.main-nav-bar-divider { /* "|" divider in the nav */
+  color: #ccc;
+  margin: 0 5px; /* spacing needed for intended visual */
+  font-weight: normal;
+}
+
+/*############################################
+              STICKY NAVIGATION BAR
+ #############################################*/
+
+/* active when sticky state is enabled via JS */
+.main-nav-bar.sticky {
+  position: fixed; /* stuck to window */
+  top: 0; left: 0; right: 0; /* position at top of page */
+  width: 100%; /* span full page width */
+  background-color: white; /* cover content beneath */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* shadow for depth */
+  z-index: 1000; /* nav stays above most content (mobile, sidebar: 1001, 1100 ) */
+
+  /* padding to align with main content (max-width: 1200px) */
+  padding-left: calc((100vw - 1200px) / 2 + 15px);
+  padding-right: calc((100vw - 1200px) / 2 + 15px);
+}
+
+/* query response for sticky nav padding when window is narrower than the max-width */
+@media (max-width: 1200px){
+  .main-nav-bar.sticky {
+    /* revert to default padding */
+    padding-left: 15px;
+    padding-right: 15px;
   }
-  a:hover {
-    color: #747bff;
+}
+
+/*############################################
+          MOBILE NAVIGATION & SIDEBAR
+ #############################################*/
+
+/* Hamburger Menu Toggle Button */
+.nav-toggle {
+  display: none; /* hidden by default */
+  background: none;
+  border: none;
+  font-size: 1.8em; /* icon size */
+  cursor: pointer; /* pointer on hover */
+  padding: 5px; /* icon padding */
+  position: absolute; /* relative to the .main-nav-bar */
+  left: 15px;
+  top: 50%; /* center vertically */
+  transform: translateY(-50%); /* force centering via translate */
+  z-index: 1001; /* above nav bar, below opened sidebar */
+}
+
+/* Mobile Sidebar Container */
+.mobile-sidebar {
+  position: fixed; /* position relative to window */
+  top: 0; left: -280px; /* offscreen to the left at top of page */
+  width: 250px;
+  height: 100%; /* full window height */
+  background-color: #f4f4f4;
+  padding: 50px 20px 20px; /* inside padding, space for close button */
+  box-shadow: 2px 0 5px rgba(0,0,0,0.2); /* separation shadow on right */
+  transition: left 0.3s ease-in-out; /* slide animation */
+  z-index: var(--highest-z-index); /* sidebar above all content via global */
+  overflow-y: auto; /* scrolling if content overflows */
+}
+
+/* Sidebar open state (changed via JS) */
+.mobile-sidebar.open {
+  left: 0; /* move sidebar into view */
+}
+
+.mobile-sidebar ul {
+  list-style: none;
+}
+
+.mobile-sidebar li {
+  margin-bottom: 15px; /* vertical item spacing */
+}
+
+.mobile-sidebar a {
+  color: #333;
+  font-size: 1.1em;
+  display: block; /* makes list area clickable */
+}
+
+/* Divider line (mobile) */
+.mobile-sidebar .mobile-divider {
+  border: none;
+  border-top: 1px solid #ddd; /* thin line at top */
+  margin: 15px 0; /* spacing for visual clarity */
+}
+
+/* Mobile Sidebar Close Button */
+.close-mobile-sidebar {
+  position: absolute; /* relative to the .mobile-sidebar */
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 2em;
+  cursor: pointer;
+  color: #555;
+}
+
+/* Dimmer for mobile sidebar */
+.overlay {
+  display: none; /* default hidden */
+  position: fixed; /* covers full window  */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black background */
+  z-index: 1050; /* below sidebar, above main content */
+}
+
+/* Sidebar open dimmer state (changed via JS) */
+.overlay.active {
+  display: block; /* make visible */
+}
+
+/*#######################################
+    MAIN CONTENT AREA - Articles Grid
+ ########################################*/
+.content-grid {
+  display: grid; /* grid layout */
+  gap: 25px; /* spacing b/n items */
+  grid-template-columns: repeat(3, 1fr); /* 3 equal-width columns */
+}
+
+/* Articles within the columns */
+.content-column article {
+  margin-bottom: 25px; /* below article */
+  padding-bottom: 15px; /* internal space b4 border */
+  border-bottom: 1px solid #eee; /* subtle line b/n articles */
+}
+
+/* Removes bottom border and margin for last articles in columns */
+.content-column article:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* Article headlines */
+article h2.headline {
+  font-size: 1.4em;
+  margin-bottom: 5px;
+  font-family: "Georgia", Times, serif;
+  font-weight: bold;
+}
+
+/* Article images */
+.article-image {
+  display: block; /* image on own line */
+  width: 100%; /* image changes based on window size */
+  height: auto; /* auto aspect ratio */
+  margin: 10px 0; /* vertical spacing */
+  object-fit: cover; /* scales to container size, preserves aspect ratio, can crop */
+}
+
+/* Article author */
+article .author {
+  font-size: 0.8em;
+  color: #777;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+/* Article content (text) */
+article .content {
+  font-size: 0.95em;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+
+/*#######################################
+            FOOTER SECTION
+ ########################################*/
+footer {
+  margin-top: 40px; /* space above footer */
+  padding-top: 20px;
+  padding-bottom: 20px;
+  text-align: center;
+  border-top: 1px solid #e2e2e2; /* line above footer */
+  font-size: 0.85em;
+  color: #666;
+}
+
+.footer-nav-bar ul { /* list formatting */
+  list-style: none;
+  gap: 10px; /* relevant if lots of footer links */
+}
+
+.footer-nav-bar a {
+  color: #666;
+  text-decoration: none;
+}
+
+.footer-nav-bar li { /* item formatting */
+  display: inline-block; /* items grow horizontally */
+  margin: 0 10px; /* item spacing */
+}
+
+/*#######################################
+               MEDIA QUERIES
+ ########################################*/
+
+/* Medium / Tablet (~1024px and below) */
+@media (max-width: 1024px) {
+  .title-bar h1 {
+    font-size: 2.2em; /* scale title down */
   }
-  button {
-    background-color: #f9f9f9;
+
+  .content-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2-column layout */
+  }
+}
+
+/* Small / Mobile (~767px and below) */
+@media (max-width: 767px) {
+  .top-bar {
+    font-size: 0.75em; /* scale down */
+  }
+
+  .top-bar-center { display: none; } /* hide languages, TODO: Add language links to mobile nav */
+
+  /* stack title elements vertically */
+  .title-bar {
+    flex-direction: column;
+    text-align: center;
+  }
+  .title-bar-left, .title-bar-right {
+    text-align: center; /* force centering */
+    margin-top: 5px; /* add space b/n items */
+    flex-basis: auto; /* reset flex-size */
+  }
+  .title-bar h1 {
+    font-size: 1.8em; /* scale down title */
+    margin-top: 10px; /* add small space above */
+    order: -1; /* moves title to top of page */
+  }
+
+  .main-nav-bar ul {
+    display: none; /* hide desktop nav */
+  }
+
+  .nav-toggle {
+    display: block; /* show mobile-nav hamburger toggle */
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr; /* single column layout */
+  }
+
+  /* Footer adjustments */
+  footer {
+    font-size: 0.8em; /* scale down text */
+  }
+  .footer-nav-bar li {
+    display: block; /* links stack vertically */
+    margin: 5px 0; /* spacing between links */
+  }
+
+  /* redundant padding to ensure mobile nav works, max-width should handle this */
+  .main-nav-bar.sticky {
+    padding-left: 15px;
+    padding-right: 15px;
   }
 }
