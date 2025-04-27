@@ -3,7 +3,7 @@ import os
 from flask_cors import CORS
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
-CORS(app)
+CORS(app) # This is the function to allow for different front and backend IP's when developing
 
 
 @app.route("/api/key")
