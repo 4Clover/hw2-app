@@ -1022,3 +1022,6 @@ cython_debug/
 /.idea/
 runConfigs
 hw2-app.iml
+
+# unsure if I need to commit this to the repo haha
+.vscode
