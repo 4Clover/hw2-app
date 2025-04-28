@@ -8,7 +8,10 @@ CORS(app) # This is the function to allow for different front and backend IP's w
 
 @app.route("/api/key")
 def get_key():
-    return jsonify({"apiKey": os.getenv("NYT_API_KEY")})
+    # return jsonify({"apiKey": os.getenv("NYT_API_KEY")})
+    # https://www.w3schools.com/python/python_strings_format.asp
+    api_key = os.getenv("NYT_API_KEY")
+    return jsonify({"searchURL": f"https://api.nytimes.com/svc/search/v2/articlesearch.json?q=election&api-key={api_key}"})
 
 
 @app.route("/")
