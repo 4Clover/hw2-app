@@ -23,4 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Fixes for source-dir .gitignore
+# Svelte Related
+.svelte-kit
+!.svelte-kit/tsconfig.json
