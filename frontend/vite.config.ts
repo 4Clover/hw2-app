@@ -1,33 +1,41 @@
 import tailwindcss from '@tailwindcss/vite';
-import { svelteTesting } from '@testing-library/svelte/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import {defineConfig, type ProxyOptions} from 'vite';
+import type * as http from "http";
 
-export default defineConfig({
-  plugins: [tailwindcss(), sveltekit()],
-  test: {
-    workspace: [
-      {
-        extends: './vite.config.ts',
-        plugins: [svelteTesting()],
-        test: {
-          name: 'client',
-          environment: 'jsdom',
-          clearMocks: true,
-          include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
-          exclude: ['src/lib/server/**'],
-          setupFiles: ['./vitest-setup-client.ts']
-        }
+const configureProxy = (proxy : any, options: ProxyOptions) => {
+  proxy.on('proxyReq', (proxyReq : http.ClientRequest, req: http.IncomingMessage, res: http.ServerResponse) => {
+    console.log('Proxying request:', req.url)
+  });
+  proxy.on('error', (err: Error, req: http.IncomingMessage, res: http.ServerResponse) => {
+    console.error('Proxy Error:', err);
+    // sending a response in the event of a hanging request
+    if (res && !res.headersSent) { // check if a response has been sent yet
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.end('Proxy error: ' + err.message);
+    } else if (res && !res.writableEnded) { // end the response if it's still open
+      res.end();
+    }
+  });
+}
+
+
+export default defineConfig(({ mode }) => ({
+  plugins: [sveltekit(), tailwindcss()],
+  server: mode === 'development' ? {
+    proxy: {
+      '/api/test_articles': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        configure: configureProxy
       },
-      {
-        extends: './vite.config.ts',
-        test: {
-          name: 'server',
-          environment: 'node',
-          include: ['src/**/*.{test,spec}.{js,ts}'],
-          exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
-        }
+      '/api/search': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        configure: configureProxy
       }
-    ]
-  }
-});
+    }
+  } : undefined,
+}));
