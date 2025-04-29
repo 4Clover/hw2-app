@@ -172,7 +172,8 @@ def fetch_nyt_articles():
         return jsonify(processed_articles)
 
     except Exception as e:
-        return e
+        app.logger.error(f"An error occurred while fetching NYT articles: {e}")
+        return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
 
 
 # Serving the HTML frontend for the app.
