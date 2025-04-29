@@ -2,6 +2,7 @@ from flask import Flask, jsonify, send_from_directory
 import os
 from flask_cors import CORS
 import requests
+import requests
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 CORS(app) # This is the function to allow for different front and backend IP's when developing
