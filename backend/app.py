@@ -9,6 +9,8 @@ BUILD_DIR = os.path.join(os.path.dirname(__file__), "build")
 app = Flask(__name__, static_folder=os.path.join(BUILD_DIR), static_url_path='/')
 CORS(app)  # This is the function to allow for different front and backend IP's when developing
 
+NYT_SAC_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=sacramento&begin_date=20250404&end_date=20250428&timestags.location.includes=california&api-key="
+NYT_DAVIS_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=%22Davis,%20California%22&begin_date=20210301&api-key="
 
 def get_key():
     api_key = os.getenv("NYT_API_KEY")
@@ -16,6 +18,26 @@ def get_key():
         app.logger.error("NYT_API_KEY environment variable not set.")
         return None
     return api_key
+
+# alyssa -------------------------------------------------
+@app.get('/api/searchArticles')
+def get_Key_and_Articles():
+    # help from CourseAssist (see aiUsage.txt) and
+    # https://www.w3schools.com/python/module_requests.asp
+    apiKey =  os.getenv('NYT_API_KEY')
+    full_url = NYT_SAC_URL + apiKey
+    response = requests.get(full_url)
+    if response.status_code != 200:
+        return jsonify({"message": "Error!"})
+    else:
+        return jsonify(response.json())
+
+@app.route("/api/getKey")
+def getKey():
+    # Note: This function is only for testing! Do not test unless you want to reveal your key
+    # unless you want the searchArticles route to not work!
+    return jsonify({"message": os.getenv('NYT_API_KEY')})
+# ----------------------------------------------------------
 
 
 # article testing endpoint
@@ -117,7 +139,6 @@ def fetch_nyt_articles():
     search_page = request.args.get('page', default=0, type=int)
     # debug info for reference, check vite.config.ts for what is actually being sent
     app.logger.info(f"Search query:'{search_query}', Filter:'{search_filter}', Page:'{search_page}'")
-
     params = {
         'q': search_query,
         'api-key': api_key,
