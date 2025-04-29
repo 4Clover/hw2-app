@@ -107,9 +107,7 @@ def parse_article_data(article):
                 if isinstance(default_image_dict, dict) and default_image_dict.get('url'):
                     image_url = default_image_dict.get('url')
 
-            if not article_id:
-                app.logger.warning(f"Article missing _id: {article.get('web_url', 'URL unavailable')}")
-                return None
+# Removed redundant check for article_id
 
             app.logger.info(f"IMG url: {image_url}")
 
