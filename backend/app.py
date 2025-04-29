@@ -10,20 +10,23 @@ NYT_SAC_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=sacram
 NYT_DAVIS_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=%22Davis,%20California%22&begin_date=20210301&api-key="
 
 
-@app.route('/api/searchArticles')
+@app.get('/api/searchArticles')
 def get_Key_and_Articles():
     # help from CourseAssist (see aiUsage.txt) and 
     # https://www.w3schools.com/python/module_requests.asp
-    location = requests.args.get("location", "sacramento")
     apiKey =  os.getenv('NYT_API_KEY')
-    if location == "sacramento":
-        full_url = NYT_SAC_URL + apiKey
-    else:
-        full_url = NYT_DAVIS_URL + apiKey
+    full_url = NYT_SAC_URL + apiKey
     response = requests.get(full_url)
-    return jsonify(response.json())
+    if response.status_code != 200:
+        return jsonify({"message": "Error!"})
+    else:
+        return jsonify(response.json())
 
-
+@app.route("/api/getKey")
+def getKey():
+    # Note: This function is only for testing! Do not test unless you want to reveal your key
+    # unless you want the searchArticles route to not work!
+    return jsonify({"message": os.getenv('NYT_API_KEY')})
 
 @app.route("/")
 @app.route("/<path:path>")
