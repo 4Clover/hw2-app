@@ -68,7 +68,7 @@
         articlesError = null;
         let fake_articles : Boolean = false; // true if testing
         try {
-            const [response] = await Promise.all([fetch((fake_articles ? '/api/test_articles': '/api/search'))]); // Promise.all() will be used to eventually fetch multiple NYT pages
+            const [response] = await Promise.all([fetch((fake_articles ? '/api/test_articles': '/api/search?query=sacramento&begin=20250401&filter=timesTags.location.includes=california'))]); // Promise.all() will be used to eventually fetch multiple NYT pages
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`); // error handling
             }
@@ -211,7 +211,7 @@
 								<section class="content-column" id="column-left">
 										{#each col1Articles as article (article.id)}
 												<article>
-														<h2 class="headline">{article.headline}</h2>
+														<a href={article.articleUrl}><h2 class="headline">{article.headline}</h2></a>
 														{#if article.imageUrl}
 																<img src={article.imageUrl} alt={article.headline} class="article-image">
 														{/if}
