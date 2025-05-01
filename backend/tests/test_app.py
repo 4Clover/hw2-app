@@ -35,7 +35,7 @@ def test_non_existent_route(client):
     assert response.status_code == 404
 
 # Dillion's tests (created by Alyssa :D)
-def test_fakesearch(client):
+def test_fake_search(client):
     response = client.get('/api/test_articles')
     assert response.status_code == 200
     assert response.json[0]["author"] == "Zesty Lemonsworth"
@@ -50,6 +50,13 @@ def test_fakesearch(client):
 def test_search(client):
     # similar to above test_searchArticles, need a valid key or else it will fail!
     # do not test_getKey if you are going to run this test!
-    response = client.get('/api/search')
+    query = 'davis'
+    response = client.get(f'/api/search?query={query}')
     assert response.status_code == 200
     assert response.json[0]["articleUrl"].startswith("https://www.nytimes.com/")
+
+def test_bad_search(client):
+    query = "limes"
+    response = client.get(f'/api/search?query={query}')
+    assert response.status_code == 500
+    assert response.json == {"error": f"Invalid search query: {query}. Please try again later."}

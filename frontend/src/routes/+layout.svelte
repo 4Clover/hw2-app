@@ -23,6 +23,7 @@
     let articles: Article[] = [];
     let isLoadingArticles: boolean = true;
     let articlesError: string | null = null;
+	let fake_articles : boolean = false; // true if testing
 	
     // nav bar related vars
 	let mainNavElement: HTMLElement | null = null; // nav bar reference
@@ -63,12 +64,11 @@
     }
     
     // populates articles dict via fetch
-	async function fetchArticles() {
+	async function fetchArticles(test_articles : boolean) {
         isLoadingArticles = true;
         articlesError = null;
-        let fake_articles : Boolean = false; // true if testing
         try {
-            const [response] = await Promise.all([fetch((fake_articles ? '/api/test_articles': '/api/search?query=sacramento&begin=20250401&filter=timesTags.location.includes=california'))]); // Promise.all() will be used to eventually fetch multiple NYT pages
+            const [response] = await Promise.all([fetch((test_articles ? '/api/test_articles': '/api/search?query=sacramento&begin=20250401&filter=timesTags.location.includes=california'))]); // Promise.all() will be used to eventually fetch multiple NYT pages
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`); // error handling
             }
@@ -86,7 +86,7 @@
 	onMount(() => {
         if (!BROWSER) return; // check for non-browser environment i.e. code outside of browser
         updateDate();
-        fetchArticles();
+        fetchArticles(fake_articles);
         // build sticky nav -- TODO: Update for better mobile viewing
         if (mainNavElement) {
             // get initial values after render
@@ -133,7 +133,7 @@
 			<span id="current-date">{currentDate}</span>
 		</div>
 		<div class="title-bar-center">
-			<h1>The New York Limes</h1>
+			<h1>The New York Times</h1>
 		</div>
 		<div id="title-bar-right">
 			<span class="market-widget">DOW +1000% ↑</span>
@@ -223,7 +223,7 @@
 								<section class="content-column" id="column-left">
 										{#each col2Articles as article (article.id)}
 												<article>
-														<h2 class="headline">{article.headline}</h2>
+													<a href={article.articleUrl}><h2 class="headline">{article.headline}</h2></a>
 														{#if article.imageUrl}
 																<img src={article.imageUrl} alt={article.headline} class="article-image">
 														{/if}
@@ -235,7 +235,7 @@
 								<section class="content-column" id="column-left">
 										{#each col3Articles as article (article.id)}
 												<article>
-														<h2 class="headline">{article.headline}</h2>
+													<a href={article.articleUrl}><h2 class="headline">{article.headline}</h2></a>
 														{#if article.imageUrl}
 																<img src={article.imageUrl} alt={article.headline} class="article-image">
 														{/if}
