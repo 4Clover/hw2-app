@@ -131,8 +131,10 @@ def fetch_nyt_articles():
         return jsonify({"error": "Server error: NYT API key not set."}), 500 # send error to frontend to show on webpage
     processed_articles = []
 
-    # TODO: Add {begin_date, end_date, page, sort} arguments
-    search_query = request.args.get('query', default="davis")
+    search_query = request.args.get('query')
+    if search_query not in ['davis', 'sacramento', 'Davis, California', 'Sacramento, California', 'Sacramento', 'Davis']:
+        return jsonify({"error": f"Invalid search query: {search_query}. Please try again later."}), 500
+
     search_begin = request.args.get('begin')
     search_end = request.args.get('end')
     search_filter = request.args.get('filter') # None most of the time
