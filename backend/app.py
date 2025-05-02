@@ -11,6 +11,7 @@ CORS(app)  # This is the function to allow for different front and backend IP's 
 
 NYT_SAC_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=sacramento&begin_date=20250404&end_date=20250428&timestags.location.includes=california&api-key="
 NYT_DAVIS_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json?q=%22Davis,%20California%22&begin_date=20210301&api-key="
+BASE_NYT_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json"
 
 def get_key():
     api_key = os.getenv("NYT_API_KEY")
@@ -147,9 +148,7 @@ def fetch_nyt_articles():
         params['end_date'] = search_end # same thing here (ex: 20250401)
     if search_filter: # add fq as a param if it actually has something, the added '&' would break the API call otherwise
         params['fq'] = search_filter
-    
-    
-    BASE_NYT_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json"
+
     # docs reference:
         # payload = {'key1': 'value1', 'key2': ['value2', 'value3']}
         # r = requests.get('https://httpbin.org/get', params=payload)
