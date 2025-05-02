@@ -126,8 +126,12 @@ def fetch_nyt_articles():
         return jsonify({"error": "Server error: NYT API key not set."}), 500 # send error to frontend to show on webpage
     processed_articles = []
 
-    # TODO: Add {begin_date, end_date, page, sort} arguments
-    search_query = request.args.get('query', default="davis")
+    search_query = request.args.get('query')
+    if search_query not in ['davis', 'sacramento', 'Davis, California', 'Sacramento, California', 'Sacramento', 'Davis']:
+        return jsonify({"error": f"Invalid search query: {search_query}. Please try again later."}), 500
+
+    search_begin = request.args.get('begin')
+    search_end = request.args.get('end')
     search_filter = request.args.get('filter') # None most of the time
     search_page = request.args.get('page', default=0, type=int)
     # debug info for reference, check vite.config.ts for what is actually being sent
@@ -137,9 +141,14 @@ def fetch_nyt_articles():
         'api-key': api_key,
         'page': search_page,
     }
+    if search_begin:
+        params['begin_date'] = search_begin # format year-month-day (no dashes!)
+    if search_end:
+        params['end_date'] = search_end # same thing here (ex: 20250401)
     if search_filter: # add fq as a param if it actually has something, the added '&' would break the API call otherwise
         params['fq'] = search_filter
-
+    
+    
     BASE_NYT_URL = "https://api.nytimes.com/svc/search/v2/articlesearch.json"
     # docs reference:
         # payload = {'key1': 'value1', 'key2': ['value2', 'value3']}
