@@ -1,6 +1,4 @@
-/*@import 'tailwindcss';*/
-/*@plugin '@tailwindcss/forms';*/
-/*@plugin '@tailwindcss/typography';*/
+@import 'tailwindcss';
 
 :root { /* globals */
     /**
@@ -197,6 +195,7 @@ header {
  #############################################*/
 
 /* Hamburger Menu Toggle Button */
+/*noinspection DuplicatedCode*/
 .nav-toggle {
     display: none; /* hidden by default */
     background: none;
@@ -408,6 +407,8 @@ footer {
 
     .nav-toggle {
         display: block; /* show mobile-nav hamburger toggle */
+        padding-top: 50px;
+        font-size: 4em;
     }
 
     .content-grid {

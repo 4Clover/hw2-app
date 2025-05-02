@@ -24,7 +24,7 @@ def get_key():
 def get_Key_and_Articles():
     # help from CourseAssist (see aiUsage.txt) and
     # https://www.w3schools.com/python/module_requests.asp
-    apiKey =  os.getenv('NYT_API_KEY')
+    apiKey =  os.getenv('NYT_API_KEY') # naming convention is against PEP8
     full_url = NYT_SAC_URL + apiKey
     response = requests.get(full_url)
     if response.status_code != 200:
@@ -33,7 +33,7 @@ def get_Key_and_Articles():
         return jsonify(response.json())
 
 @app.route("/api/getKey")
-def getKey():
+def getKey(): # naming convention is against PEP8
     # Note: This function is only for testing! Do not test unless you want to reveal your key
     # unless you want the searchArticles route to not work!
     return jsonify({"message": os.getenv('NYT_API_KEY')})
@@ -41,7 +41,7 @@ def getKey():
 
 
 # article testing endpoint
-@app.route("/api/test_articles")
+@app.route("/api/test_articles") # temp -- will delete at some point
 def get_articles():
     try:
         # placeholder data - replace this with actual NYT API calls
@@ -107,10 +107,6 @@ def parse_article_data(article):
                 if isinstance(default_image_dict, dict) and default_image_dict.get('url'):
                     image_url = default_image_dict.get('url')
 
-# Removed redundant check for article_id
-
-            app.logger.info(f"IMG url: {image_url}")
-
             return { # dictionary
                 'id': article_id,
                 'headline': main_headline,
@@ -122,7 +118,6 @@ def parse_article_data(article):
         except Exception as e:
             app.logger.error(f"Error parsing article data for article ID {article.get('_id', 'N/A')}: {e}", exc_info=True) # includes exc for ease of debugging
             return None
-
 
 @app.route("/api/search")
 def fetch_nyt_articles():
@@ -174,7 +169,6 @@ def fetch_nyt_articles():
     except Exception as e:
         app.logger.error(f"An error occurred while fetching NYT articles: {e}")
         return jsonify({"error": "An unexpected error occurred. Please try again later."}), 500
-
 
 # Serving the HTML frontend for the app.
 @app.route("/")
