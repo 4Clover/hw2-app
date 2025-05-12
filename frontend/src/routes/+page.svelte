@@ -33,8 +33,8 @@
     let infinitePointElement: HTMLDivElement | null = null;
     let observer: IntersectionObserver | null = null;
     let observerInitialized: boolean = false;
-    let isThrottled: boolean = false; // <-- New throttle flag
-    let throttleTimeoutId: ReturnType<typeof setTimeout> | null = null; // <-- New timeout ID holder
+    let isThrottled: boolean = false;
+    let throttleTimeoutId: ReturnType<typeof setTimeout> | null = null;
     
     // nav bar related vars
     let mainNavElement: HTMLElement | null = null; // nav bar reference
