@@ -1,9 +1,10 @@
 <script lang="ts" >
-    import {onMount, onDestroy} from 'svelte'; // function to activate on component mount to the DOM
+    import {onMount, onDestroy} from 'svelte'; // functions to activate on component mount and dismount from the DOM
     import {BROWSER} from 'esm-env'; // sveltekit environment variable, used to check if user is in the browser or not
     import '../app.css'; // global CSS file
+    // TODO: check if can remove after static renderer change
     export const ssr = false; // fixes a build error since sveltekit is meant to be server-side rendered, not statically generated/served
-    
+
     interface Article { // format of the data received from the backend
         id: number,
         headline: string,
@@ -13,19 +14,33 @@
         articleUrl: string
     }
 
-    const THROTTLE_DELAY = 1000; // milliseconds (1 second) - adjust as needed
-    
-    // nav bar and footer related states
+    // --- Constants ---
+    const THROTTLE_DELAY = 1000; // in milliseconds i.e. 1 second
+    const RESIZE_DEBOUNCE_DELAY = 150; // milliseconds
+    const API_BASE_QUERY = 'sacramento';
+    const API_BEGIN_DATE = '20230401';
+    const API_FILTER_LOCATION = 'timesTags.location.includes=california';
+
+    // --- Component State ---
+
+    // UI State
     let currentDate: string = 'Loading Date...';
     let currentYear: string = new Date().getFullYear().toString();
     let isSidebarOpen: boolean = false;
-    let isSticky: boolean = false;
 
-    // article related vars
+    // Sticky Navigation State
+    let mainNavElement: HTMLElement | null = null;
+    let navHeight: number = 0;
+    let stickyPoint: number = 0; // updated on window resize
+    let isSticky: boolean = false;
+    let resizeTimeoutId: ReturnType<typeof setTimeout> | null = null; // for debouncing on resize
+
+    // Articles State
     let articles: Article[] = [];
     let articlesError: string | null = null;
-    let fake_articles : boolean = false; // true if testing
-    // infinite scroll
+    let useMockApi: boolean = false; // true if testing (PRIOR: fake_articles)
+
+    // Infinite Scroll State
     let isLoadingInitArticles: boolean = true;
     let isLoadingMoreArticles: boolean = false;
     let currentPage: number = 0;
@@ -35,41 +50,100 @@
     let observerInitialized: boolean = false;
     let isThrottled: boolean = false;
     let throttleTimeoutId: ReturnType<typeof setTimeout> | null = null;
-    
-    // nav bar related vars
-    let mainNavElement: HTMLElement | null = null; // nav bar reference
-    let navHeight: number = 0;
-    let stickyPoint: number = 0; // calculated on mount
 
-    // --- visual state change functions ---
+    // --- UI Update Functions ---
     function updateDate() {
         const today = new Date();
         const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         currentDate = today.toLocaleDateString('en-US', options);
     }
     function openSidebar() {
-        isSidebarOpen = true; // possibly add overlay-related code here
+        isSidebarOpen = true;
     }
     function closeSidebar() {
-        isSidebarOpen = false; // ''                                 ''
+        isSidebarOpen = false;
     }
-    // --- end of visual state change functions ---
 
-
-    // changed to only a state change handler, rather than updating calculations
-    // I beleive this is more efficent given calculations are done on mount
+    // --- Sticky Navigation Handler ---
     function handleStickyNavScroll() {
         if (!mainNavElement || !BROWSER) return;
-        if (window.scrollY > stickyPoint) {
-            if (!isSticky) isSticky = true;
+        // validate stickyPoint after recalc
+        if (stickyPoint > 0 && window.scrollY > stickyPoint) {
+            if (!isSticky) {
+                console.log(`Nav is now sticky. ScrollY: ${window.scrollY}, StickyPoint: ${stickyPoint}`);
+                isSticky = true;
+            }
         } else {
-            if (isSticky) isSticky = false;
+            if (isSticky) {
+                console.log(`Nav is now static. ScrollY: ${window.scrollY}, StickyPoint: ${stickyPoint}`);
+                isSticky = false;
+            }
+        }
+    }
+    
+    // --- Recalculate Sticky Point Function ---
+    function updateStickyPoint() {
+        if (!mainNavElement || !BROWSER) return;
+        // recalc based on CURRENT position
+        stickyPoint = mainNavElement.offsetTop;
+        navHeight = mainNavElement.offsetHeight;
+        console.log(`Recalculated - Sticky Point: ${stickyPoint}px, Nav Height: ${navHeight}px`);
+        handleStickyNavScroll(); // immediately handle for cases where resizing WITHOUT scrolling crosses the threshold
+    }
+
+    // --- Debounced Resize Handler ---
+    function handleResize() {
+        if (!BROWSER) return;
+        if (resizeTimeoutId) clearTimeout(resizeTimeoutId);
+        resizeTimeoutId = setTimeout(updateStickyPoint, RESIZE_DEBOUNCE_DELAY);
+    }
+
+    // --- API Helper Functions ---
+    function buildApiUrl(page: number, mock: boolean): string {
+        const baseUrl = mock ? '/api/test_articles' : '/api/search'; // if mock true, use testing articles
+        if (mock) {
+            return baseUrl;
+        }
+        return `${baseUrl}
+		        ?query=${encodeURIComponent(API_BASE_QUERY)}
+		        &begin_date=${API_BEGIN_DATE}
+		        &filter=${encodeURIComponent(API_FILTER_LOCATION)}
+		        &page=${page}`;
+    }
+	
+    // --- Response Processing w/ error checking on formatting or return type ---
+    function processApiResponse(newArticlesData: any, pageToFetch: number) {
+        if (!Array.isArray(newArticlesData)) { // incorrect return type
+            if (typeof newArticlesData === 'object' && newArticlesData !== null && 'error' in newArticlesData) {
+                throw new Error(`API Error: ${(newArticlesData as {error: string}).error}`);
+            }
+            console.error("Unexpected API response format:", newArticlesData);
+            throw new Error("Unexpected data format received from API.");
+        }
+
+        const newArticles: Article[] = newArticlesData;
+        console.log(`Fetched ${newArticles.length} articles for page ${pageToFetch}.`);
+
+        if (newArticles.length === 0 && pageToFetch > 0) { // no articles to load
+            hasMoreArticles = false;
+            console.log("No more articles found.");
+        } else if (newArticles.length > 0) { // append new articles
+            const currentIds = new Set(articles.map(a => a.id));
+            const uniqueNewArticles = newArticles.filter(a => a?.id && !currentIds.has(a.id));
+            articles = [...articles, ...uniqueNewArticles];
+
+            if (!useMockApi && newArticles.length < 10 && pageToFetch > 0) { // mockAPI checked here for loading purposes
+                hasMoreArticles = false;
+                // if less than 10 articles found, show in log
+                console.log("Assuming no more articles based on count < 10 (actual count: " + newArticles.length + ").");
+            }
+        } else if (pageToFetch === 0 && newArticles.length === 0) {
+            console.log("No articles found on initial fetch.");
         }
     }
 
-
     async function fetchArticlesPage(pageToFetch: number) {
-        // loading state based on page number
+        // timeout check (needed due to NYT api fetch rate limit -- ~3 calls per second
         if (pageToFetch === 0) {
             isLoadingInitArticles = true;
         } else {
@@ -77,61 +151,29 @@
                 console.warn(`Fetch attempt for page ${pageToFetch} blocked by concurrent loading.`);
                 return;
             }
-            isLoadingMoreArticles = true; // loading state for pages
+            isLoadingMoreArticles = true;
         }
         articlesError = null;
-		
-        // basic search
-        const query = 'sacramento';
-        const begin = '20230401';
-        const filter = 'timesTags.location.includes=california';
-        const baseUrl = fake_articles ? '/api/test_articles' : '/api/search';
-        const apiUrl = fake_articles
-            ? baseUrl
-            : `${baseUrl}?query=${encodeURIComponent(query)}&begin_date=${begin}&filter=${encodeURIComponent(filter)}&page=${pageToFetch}`;
 
+        const apiUrl = buildApiUrl(pageToFetch, useMockApi);
+		
+        // try-catch for fetch
         try {
-            // http check
             console.log(`Fetching page: ${pageToFetch} from ${apiUrl}`);
             const response = await fetch(apiUrl);
+
             if (!response.ok) {
                 let errorBody = `HTTP error! status: ${response.status}`;
                 try {
                     const errorJson = await response.json();
                     if (errorJson?.error) errorBody += ` - ${errorJson.error}`;
                     else if (errorJson?.message) errorBody += ` - ${errorJson.message}`;
-                } catch { /* ignore */ }
-                throw new Error(errorBody);
+                } catch { /*ignore and always print */ }
+                console.error(errorBody);
             }
+
             const newArticlesData = await response.json();
-			
-            
-            // lots of error checking -------------
-            if (!Array.isArray(newArticlesData)) {
-                if (typeof newArticlesData === 'object' && newArticlesData?.error) {
-                    throw new Error(`API Error: ${newArticlesData.error}`);
-                }
-                console.error("Unexpected API response format:", newArticlesData);
-                throw new Error("Unexpected data format received from API.");
-            }
-            const newArticles: Article[] = newArticlesData;
-            console.log(`Fetched ${newArticles.length} articles for page ${pageToFetch}.`);
-
-            if (newArticles.length === 0 && pageToFetch > 0) {
-                hasMoreArticles = false;
-                console.log("No more articles found.");
-            } else if (newArticles.length > 0) {
-                const currentIds = new Set(articles.map(a => a.id));
-                const uniqueNewArticles = newArticles.filter(a => a?.id && !currentIds.has(a.id));
-                articles = [...articles, ...uniqueNewArticles];
-
-                if (!fake_articles && newArticles.length < 10 && pageToFetch > 0) {
-                    hasMoreArticles = false;
-                    console.log("Assuming no more articles based on count < 10.");
-                }
-            } else if (pageToFetch === 0 && newArticles.length === 0) {
-                console.log("No articles found on initial fetch.");
-            }
+            processApiResponse(newArticlesData, pageToFetch);
 
         } catch (e: any) {
             console.error(`Failed to fetch articles for page ${pageToFetch}:`, e);
@@ -139,93 +181,97 @@
         } finally {
             isLoadingInitArticles = false;
             isLoadingMoreArticles = false;
-        } // stop!!
+        }
     }
 
     // --- Intersection Observer Callback ---
     function onIntersection(entries: IntersectionObserverEntry[]) {
         const entry = entries[0];
+        // check if not already loading, activate throttle, release after timer
         if (entry.isIntersecting && hasMoreArticles && !isLoadingMoreArticles && !isLoadingInitArticles && !isThrottled) {
             console.log('Watcher visible AND not throttled, loading next page...');
-
-            // --- throttle BEFORE fetch ---
             isThrottled = true;
             console.log(`Throttling activated. Cooldown: ${THROTTLE_DELAY}ms`);
-
             currentPage++;
-            fetchArticlesPage(currentPage); // fetch the next page
+            fetchArticlesPage(currentPage);
 
-            // --- timeout to release throttle ---
             if (throttleTimeoutId) clearTimeout(throttleTimeoutId);
             throttleTimeoutId = setTimeout(() => {
                 isThrottled = false;
                 console.log('Throttle released.');
             }, THROTTLE_DELAY);
-
         } else if (entry.isIntersecting) {
-            console.log('Watcher visible but not loading:', { hasMoreArticles, isLoadingMoreArticles, isLoadingInitArticles, isThrottled });
+            console.log('Watcher visible but not loading (conditions not met):', { hasMoreArticles, isLoadingMoreArticles, isLoadingInitArticles, isThrottled });
         }
     }
 
-    
-    // load everything
+    // --- Lifecycle Hooks ---
     onMount(() => {
         if (!BROWSER) return;
         updateDate();
-        fetchArticlesPage(currentPage);
+        fetchArticlesPage(currentPage); // init fetch
 
-        // sticky Nav Setup
         if (mainNavElement) {
-            stickyPoint = mainNavElement.offsetTop;
-            navHeight = mainNavElement.offsetHeight;
-            if (navHeight > 0) {
-                window.addEventListener('scroll', handleStickyNavScroll);
-                console.log(`Sticky nav initialized. Height: ${navHeight}px, Sticky Point: ${stickyPoint}px`);
-            } else {
-                console.warn('Sticky navigation disabled: Nav element height is 0.');
-            }
+            setTimeout(() => {
+                updateStickyPoint(); // on mount calculation
+                if (navHeight > 0) {
+                    window.addEventListener('scroll', handleStickyNavScroll, { passive: true }); // passive so not updating every tick
+                    window.addEventListener('resize', handleResize);
+                    console.log(`Sticky nav initialized.`);
+                } else {
+                    console.warn('Sticky navigation disabled: Nav element height is 0 on mount.');
+                }
+            }, 100); // milliseconds delay for layout stability
+
+        } else {
+            console.warn('Main navigation element not found for sticky setup.');
         }
     });
-
+	
+    // --- Reactive Code for Observer ---
+    // '$' is a reactive statement for any variables within the code block
     $: if (BROWSER && !isLoadingInitArticles && infinitePointElement && !observerInitialized && hasMoreArticles) {
         console.log("Conditions met, setting up Intersection Observer...");
         observer = new IntersectionObserver(onIntersection, {
-            rootMargin: '200px' // adjust rootMargin if needed
+            rootMargin: '300px' // preload for infinite scroll ease of viewing, hard to perfect given NYT API limit
         });
         observer.observe(infinitePointElement);
         observerInitialized = true;
         console.log("Intersection Observer is set up reactively.");
     } else if (BROWSER && observerInitialized && !hasMoreArticles && observer) {
-        console.log("No more articles expected, disconnecting observer.");
+        console.log("No more articles expected or observer conditions changed, disconnecting observer.");
         observer.disconnect();
-        observer = null;
-        observerInitialized = false;
+        observer = null; // clear the observer
+        observerInitialized = false; // reset init
     }
 
-
-    // --- cleanup ---
     onDestroy(() => {
         if (observer) {
             observer.disconnect();
-            console.log("Intersection Observer disconnected on component destroy.");
+            console.log("Intersection Observer disconnected.");
         }
         if (throttleTimeoutId) {
             clearTimeout(throttleTimeoutId);
-            console.log("Throttle timeout cleared on component destroy.");
+            console.log("Throttle timeout cleared.");
         }
-        if (mainNavElement && navHeight > 0 && BROWSER) {
+        if (resizeTimeoutId) {
+            clearTimeout(resizeTimeoutId);
+        }
+        if (BROWSER) {
             window.removeEventListener('scroll', handleStickyNavScroll);
-            console.log("Sticky nav scroll listener removed.");
+            window.removeEventListener('resize', handleResize);
+            console.log("Scroll and resize listeners removed.");
         }
     });
 </script>
+
 
 <!-- Header -->
 <header>
 		<!-- Top bar -->
 		<div class="top-bar">
 				<div class="top-bar-left">
-						<span>Search</span>
+						<span>&#x1F50D</span> <!-- Magnifying glass -->
 				</div>
 				<div class="top-bar-center">
 						<span><a href="# ">U.S.</a></span>
@@ -308,7 +354,7 @@
 </header>
 
 <!-- Body -->
-<div class="main-content-area">
+<div class="main-content-area" style="{isSticky ? `padding-top: ${navHeight}px;` : ''}">
 		<main id="main-content">
 				{#if isLoadingInitArticles}
 						<!-- Show initial loading message -->
