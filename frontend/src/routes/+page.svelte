@@ -104,11 +104,7 @@
         if (mock) {
             return baseUrl;
         }
-        return `${baseUrl}
-		        ?query=${encodeURIComponent(API_BASE_QUERY)}
-		        &begin_date=${API_BEGIN_DATE}
-		        &filter=${encodeURIComponent(API_FILTER_LOCATION)}
-		        &page=${page}`;
+        return `${baseUrl}?query=${encodeURIComponent(API_BASE_QUERY)}&begin_date=${API_BEGIN_DATE}&filter=${encodeURIComponent(API_FILTER_LOCATION)}&page=${page}`;
     }
 	
     // --- Response Processing w/ error checking on formatting or return type ---
@@ -169,7 +165,7 @@
                     if (errorJson?.error) errorBody += ` - ${errorJson.error}`;
                     else if (errorJson?.message) errorBody += ` - ${errorJson.message}`;
                 } catch { /*ignore and always print */ }
-                console.error(errorBody);
+                throw new Error(errorBody);
             }
 
             const newArticlesData = await response.json();
